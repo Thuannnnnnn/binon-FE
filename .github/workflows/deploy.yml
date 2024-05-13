@@ -24,13 +24,19 @@ jobs:
         run: npm install
       - name: Build
         run: npm run build
+      - name: Create Temporary Directory
+        run: mkdir temp_deploy
+      - name: Move Dist to Temporary Directory
+        run: mv dist/* temp_deploy/
       - name: Upload to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          server: ftp.shopcuathuan.shop
+          server: ftp.example.com
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           server-dir: /public_html
-          local-dir: dist
+          local-dir: temp_deploy
           exclude: |
             .git*
+      - name: Clean Up
+        run: rm -rf temp_deploy
