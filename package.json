@@ -1,7 +1,7 @@
 {
   "name": "binon-fe",
   "private": true,
-  "homepage": "./",
+  "homepage": "https://shopcuathuan.shop/",
   "version": "0.0.0",
   "type": "module",
   "scripts": {
