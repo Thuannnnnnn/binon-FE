@@ -1,47 +1,36 @@
 name: Deploy to cPanel
 
 on:
+  # Runs on pushes targeting the default branch
   push:
-    branches:
-      - main
+    branches: ['main']
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# Allow one concurrent deployment
+concurrency:
+  group: 'cpanel'
+  cancel-in-progress: true
 
 jobs:
+  # Single deploy job since we're just deploying
   deploy:
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        node-version: [14.x, 16.x, 18.x]
-
     steps:
-      - name: Checkout Code 🚚
+      - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Install Dependencies 📦
+      - name: Install Dependencies
         run: npm install
-
-      - name: Build React App / Vue App (depending on user app) 🏗️
+      - name: Build
         run: npm run build
-
-      - name: Create Temporary Directory 📁
-        run: mkdir temp_deploy
-
-      - name: Move Dist to Temporary Directory 📂
-        run: mv dist/* temp_deploy/
-
-      - name: Upload to cPanel 📂
+      - name: Upload to cPanel
         uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
           server: ftp.shopcuathuan.shop
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: /public_html/
-          local-dir: temp_deploy/
+          server-dir: /public_html
+          local-dir: dist
           exclude: |
-            **/.git**
-            **/.git*/**
-            **/node_modules/**
-            **/.**
-
-      - name: Clean Up 🧹
-        run: rm -rf temp_deploy
+            .git*
