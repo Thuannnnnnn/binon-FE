@@ -29,8 +29,8 @@ jobs:
           server: ftp.shopcuathuan.shop
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: /public_html/
-          local-dir: /dist/
+          server-dir: public_html/
+          local-dir: ./dist/
           exclude: |
             **/.git**
             **/node_modules/**
