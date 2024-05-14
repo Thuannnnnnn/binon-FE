@@ -11,6 +11,6 @@ jobs:
     - name: 📂 Sync files
       uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       with:
-        server: ftp.samkirkland.com
+        server: ftp.shopcuathuan.shop
         username: ${{ secrets.FTP_PASSWORD }}
         password: ${{ secrets.FTP_USERNAME }}
