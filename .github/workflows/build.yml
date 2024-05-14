@@ -1,35 +1,36 @@
 
-name: Deploy to cPanel
-
 on:
-  # Runs on pushes targeting the default branch
   push:
-    branches: ['main']
-
-  # Allows you to run this workflow manually from the Actions tab
-  workflow_dispatch:
+    branches:
+      - master
 
 jobs:
-  # Single deploy job since we're just deploying
   deploy:
     runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x, 18.x]
+
     steps:
-      - name: Checkout
+      - name: Checkout Code 🚚
         uses: actions/checkout@v3
-      - name: Set up Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: 'npm'
-      - name: Install dependencies
+
+      - name: Install Dependencies 📦
         run: npm install
-      - name: Build
+
+      - name: Build React App / Vue App (depending on user app) 🏗️
         run: npm run build
-      - name: Deploy to cPanel
-        uses: peaceiris/actions-cpanel@v1
+
+      - name: Upload to cPanel 📂
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
         with:
-          cpanel_host: ftp.shopcuathuan.shop
-          cpanel_username: ${{ secrets.FTP_USERNAME }}
-          cpanel_password: ${{ secrets.FTP_PASSWORD }}
-          cpanel_app_directory: 'public_html'
-          source_directory: 'dist'
+          server: ftp.shopcuathuan.shop
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          server-dir: /public_html/
+          exclude: |
+            **/.git**
+            **/.git*/**
+            **/node_modules/**
+            **/.**
