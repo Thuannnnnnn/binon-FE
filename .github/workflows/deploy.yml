@@ -1,37 +1,440 @@
-name: Deploy to cPanel
+Skip to content
+DEV Community
+Search powered by Algolia...
 
+Log in
+Create account
+
+0
+Jump to Comments
+3
+Save
+
+Sadiq Salau
+Sadiq Salau
+Posted on 24 Dec 2022 • Updated on 10 Jan 2023
+
+
+2
+Cpanel Git: Part 1 - Deploying the React App
+#
+git
+#
+github
+#
+react
+#
+laravel
+React + Laravel - Cpanel Shared Hosting (4 Part Series)
+1
+Cpanel Git: Part 1 - Deploying the React App
+2
+Cpanel Git: Part 2 - Consuming the Laravel API
+3
+Cpanel Git: Part 3 - Deploying the Laravel API
+4
+Cpanel Git: Notes for Windows users
+This is my first post here.
+
+I'm going to explain how to deploy a React App on a Cpanel Shared Hosting using Git. Ensure you have git and nodejs setup.
+
+Scaffolding a new react app
+You can use your preferred package manager e.g yarn, pnpm or using npx.
+pnpm create vite@latest example-react-app
+
+Read about vitejs at: https://vitejs.dev/guide/
+
+Choose a framework
+Selecting a framework
+
+Choose a variant
+Selecting a variant
+
+Follow the remaining prompts
+React app scaffolded successfully
+
+Initiate a git repository
+Inside our newly scaffolded react app we are going to run the following commands
+git init
+git add .
+git commit -m "Initial Project"
+
+Creating a github repository
+Head over to github.com and create a new repository. You can decide to create a private repository. For the purpose of this tutorial I will call it cpanel-react-example
+
+Creating a new github repository
+
+Pushing to github
+Since we have already initiated our github repository we are going to push our existing one. Now inside the react app we scaffolded earlier we will follow the github commands.
+
+Pushing to github
+
+With that done, our github repository should look like this.
+
+Github Repository
+
+Adding the build action
+We are going to create a new file .github/workflows/build.yml
+
+If you don't understand this, inside your newly scaffolded app you will need to create a folder .github then create a folder workflows inside it. Finally you will create a file build.yml inside the workflows folder.
+
+Base dir
+
+Workflows
+
+Github Action
+
+Edit the build.yml.
+name: React App build workflow
 on:
   push:
     branches:
       - main
-
 jobs:
-  deploy:
-    runs-on: ubuntu-latest
-
+  build:
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
-        node-version: [14.x, 16.x, 18.x]
-
+        node-version: [15]
     steps:
-      - name: Checkout Code 🚚
-        uses: actions/checkout@v3
+    - uses: actions/checkout@v3
+    - uses: pnpm/action-setup@v2.2.4
+      with:
+        version: 7
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+    - name: Install dependencies
+      run: pnpm install
+    - name: Build
+      run: pnpm run build
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
+        publish_dir: ./dist
+What the script does is to build our react app and deploy it to the gh-pages branch whenever we push to the main branch. You can read more about github actions at https://docs.github.com/en/actions
 
-      - name: Install Dependencies 📦
-        run: npm install
+We will commit our changes and push to github
+git add .
+git commit -m "Added github action"
+git push
 
-      - name: Build React App / Vue App (depending on user app) 🏗️
-        run: npm run build
+Once pushed we will have a new branch called gh-pages containing our deploy
 
-      - name: Upload to cPanel 📂
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.4
-        with:
-          server: ftp.shopcuathuan.shop
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          server-dir: /public_html/
-          exclude: |
-            **/.git**
-            **/.git*/**
-            **/node_modules/**
-            **/.**
+Actions
+
+Branches
+
+Gh-Pages branch
+
+Deploying to hosting
+To deploy to your shared hosting you will need two items:
+
+A .cpanel.yml file - Read more at https://docs.cpanel.net/knowledge-base/web-services/guide-to-git-deployment/
+Deploy keys
+Creating .cpanel.yml
+The .cpanel.yml file is like the github action script but for cpanel. It contains the instructions on how to deploy the react app.
+
+Navigate to the public folder of your react-app and create three new files
+.cpanel.yml
+.deploy.example.sh
+.gitignore
+
+Cpanel Deploy files
+
+We will edit our files using the content of this github gist: https://gist.github.com/sadiqsalau/c1b0f0e4b15e40274b64854c6c557e24
+
+.cpanel.yml
+This file is required for any cpanel deployment. It contains all command to deploy the react app. .cpanel.yml file can be destructive so make sure you take a look at it especially the parts that make use of the command rm -rf. Edit it to suit your deployment.
+
+.deploy.example.sh
+This file is an example of .deploy.sh. Treat it like a .env.example file
+
+.deploy.sh
+Based on the .cpanel.yml in that gist, this will automatically be created on your shared hosting when you run your first deployment. Treat it like a .env that exports variables that define the path where your react app will be deployed to on your hosting. Once created you should edit it before your next deployment.
+
+.gitignore
+Our .gitignore file will exclude .deploy.sh from being tracked by git.
+
+With all three files setup, it's time to commit them. So we will run:
+git add .
+git commit -m "Added cpanel deploy script"
+git push
+
+Generating deploy keys
+Open a new terminal and run
+ssh-keygen -t ecdsa-sha2-nistp256 -C "your_email@example.com"
+Note: Some shared hosting can't clone a repository using a key with password so when prompted to enter a password just press enter.
+
+Also take note of where the generated keys are stored
+
+Generating SSH key
+
+SSH key
+
+We are going to rename our keys, for this tutorial they will be renamed to cpanel_react_example
+
+Renamed keys
+
+Adding github deploy keys
+Now go to your github repository, navigate to Settings > Security > Deploy Keys and add a new deploy key.
+
+Navigate to settings tab
+
+Security section
+
+List of keys
+
+Give your key a title e.g Deploy key, for the key field copy the content of your public key (id_ecdsa.pub which we renamed to cpanel_react_example.pub). You can open the public key with a text editor or run the command cat key_name.pub with key_name being the name of your key.
+
+As an example it should look like this
+
+Public key example
+
+Adding new key
+
+Finally add the deploy key.
+
+New deploy key
+
+Deploying to Cpanel
+Login to Cpanel
+Cpanel Login Page
+
+Navigate to file manager
+File Manager link
+
+Creating .ssh folder
+Click settings, enable hidden files and create a new folder named .ssh if it doesn't exist
+
+File Manager
+
+Settings
+
+New .ssh folder
+
+Upload deploy keys
+Open .ssh folder and upload your deploy keys
+
+.ssh folder
+
+Uploaded deploy keys
+
+Change private key permission
+Right click and change the permission of your private key to 0600
+
+Right click private key
+
+Initial Permissions
+
+Unchecked permissions
+
+Permission updated
+
+Create .ssh config
+Still within our .ssh folder create a new file named config
+
+New button
+
+Create config file
+
+Edit .ssh config
+Edit config
+
+Edit replacing example-1 with your github repository name and example_1 with your ssh key name.
+Host example-1.github.com
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/example_1
+  IdentitiesOnly yes
+Edit config content
+
+Once done return to cpanel dashboard
+
+Return to cpanel
+
+Creating a new cpanel repository
+Navigate to Git Version Control
+Cpanel Git Version Control
+
+Create a new repository
+
+The Clone URL will have this format
+git@example-repo.github.com:example-user/example-repo.git
+
+The other fields should be filled automatically
+
+Create repo part 1
+
+Create repo part 2
+
+Repo cloned
+
+Take note of the path to your repository.
+
+Switching-checked out branch
+Click on the manage button
+Manage repository
+
+Change the checked-out branch to gh-pages
+Switch checked out branch
+
+Switching checked-out branch
+
+Switched successfully
+
+Running first deployment
+Switch to the Pull or Deploy tab
+
+Switch to pull or deploy
+
+Before we deploy, let's open our repository in the file manager to see its contents
+
+Open repo in file manager
+
+Repository content
+
+If you take a look at the files listed, you should notice that there is no .deploy.sh which we mentioned earlier. It will be created once we run our first deployment.
+Let's return to the repository and deploy
+
+Deploy repository
+
+Deployed repository
+
+Once it has been deployed a new file .deploy.sh will be created. It should be edited if you aren't deploying to the root of your site (usually the public_html folder).
+
+New .deploy.sh
+
+Running the second deployment
+Now return and run deploy once more.
+
+Deploy once more
+
+Once deployed, navigate to the path where you specified in .deploy.sh, you should see the react app.
+
+Site Deployed
+
+Visit the url of your site to see your live app..
+
+Site live
+
+Now whenever you make changes to your app and push to github just go to your repository, pull then deploy.
+
+Pull and deploy
+
+A working example can be found at: https://github.com/sadiqsalau/cpanel-react-example
+
+The next part is using laravel as the API..
+
+React + Laravel - Cpanel Shared Hosting (4 Part Series)
+1
+Cpanel Git: Part 1 - Deploying the React App
+2
+Cpanel Git: Part 2 - Consuming the Laravel API
+3
+Cpanel Git: Part 3 - Deploying the Laravel API
+4
+Cpanel Git: Notes for Windows users
+👋 Before you go
+
+Was this post valuable?
+Please say "thank you" by commenting on this post!
+
+Everyone is welcome
+
+Top comments (0)
+Subscribe
+pic
+Add to the discussion
+Code of Conduct • Report abuse
+profile
+Platform.sh
+PROMOTED
+
+Billboard image
+
+Experience effortless application deployment 🚀
+Deploy your apps seamlessly on an all-in-one PaaS.
+🚀 Flexible, automated infrastructure provisioning.
+🎯 Multicloud and multistack.
+👾 Safe, secure and reliable around-the-clock.
+👉 Get a 30-day free trial to build and deploy your way.
+
+Claim your free trial
+
+Read next
+mdsiaofficial profile image
+Error on Node JS npm/npx project creating with vite/react js "node:internal/modules/cjs/loader:1205 throw err"
+Md Shoriful Islam - Apr 29
+
+nocobase profile image
+Major Update! Open-Source No-Code/Low-Code Platform NocoBase v1.0 Officially Released!
+NocoBase - Apr 29
+
+maazakn profile image
+A Guide to Effortlessly Use SVGs in Next Js Projects
+Maaz Ahmed Khan - Apr 30
+
+dilane3 profile image
+Rasengan.js 1.0.0 Beta 🚀
+Dilane3 - Apr 28
+
+
+Sadiq Salau
+Follow
+A fullstack developer with a passion for coding and problem solving, constantly looking for ways to expand his knowledge.
+LOCATION
+Nigeria
+JOINED
+10 Dec 2020
+More from Sadiq Salau
+Cpanel Git: Notes for Windows users
+#git #github #react #laravel
+Cpanel Git: Part 3 - Deploying the Laravel API
+#git #github #react #laravel
+Cpanel Git: Part 2 - Consuming the Laravel API
+#git #github #react #laravel
+profile
+Tidelift
+PROMOTED
+
+Join us June 5 for Upstream!
+
+Join us June 5 for Upstream!
+A day of celebrating open source, the developers who use it and the maintainers who build it. First 200 U.S. attendees are eligible for a free t-shirt!
+
+Register now
+
+name: React App build workflow
+on:
+  push:
+    branches:
+      - main
+jobs:
+  build:
+    runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        node-version: [15]
+    steps:
+    - uses: actions/checkout@v3
+    - uses: pnpm/action-setup@v2.2.4
+      with:
+        version: 7
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'pnpm'
+    - name: Install dependencies
+      run: pnpm install
+    - name: Build
+      run: pnpm run build
+    - name: Deploy
+      uses: peaceiris/actions-gh-pages@v3
+      with:
+        github_token: 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
+        publish_dir: ./dist
