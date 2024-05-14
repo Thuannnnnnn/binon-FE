@@ -8,9 +8,14 @@ jobs:
     - name: 🚚 Get latest code
       uses: actions/checkout@v4
     
+    - name: 🛠️ Build
+      run: npm run build
+    
     - name: 📂 Sync files
       uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       with:
         server: ftp.shopcuathuan.shop
-        username:  ${{ secrets.FTP_USERNAME }}
+        username: ${{ secrets.FTP_USERNAME }}
         password: ${{ secrets.FTP_PASSWORD }}
+        server-dir: /public_html
+        local-dir: build
