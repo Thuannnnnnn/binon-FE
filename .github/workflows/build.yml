@@ -18,7 +18,7 @@ jobs:
         npm install
         npm run build
     
-    - name: 📂 Sync files
+    - name: 📂 Sync files ${{ secrets.FTP_USERNAME }}
       uses: SamKirkland/FTP-Deploy-Action@v4.3.5
       with:
         server: ftp.shopcuathuan.shop
