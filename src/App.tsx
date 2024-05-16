@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios, { AxiosError } from 'axios';
 import reactLogo from './assets/react.svg';
-import viteLogo from './assets/vite.svg';
+import viteLogo from '../public/vite.svg';
 import './App.css';
 
 const App: React.FC = () => {
